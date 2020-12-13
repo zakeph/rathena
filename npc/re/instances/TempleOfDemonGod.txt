@@ -103,7 +103,7 @@ moro_cav,41,73,4	script	Guardian Nidhogg#epeom01	4_F_NYDHOG,{
 		}
 		if (isbegin_quest(7596))
 			erasequest 7596;
-		close;
+		close3;
 	}
 }
 
@@ -154,7 +154,7 @@ moro_cav,45,75,0	script	Yggdrasil Lookalike#eom_gate	CLEAR_NPC,{
 			mes "It hurts my brain, this is the gap I finally made...";
 			mes "may not be able to enter at the moment...";
 			cutin "ep14_nyd01.bmp",2;
-			close;
+			close3;
 		case IE_OK:
 			mapannounce "moro_cav", "" + strcharinfo(0) + " of the party " + getpartyname( getcharid(1) ) + ", is entering Temple of the Demon God.",bc_map;
 			// warp "1@eom",101,16;
@@ -273,31 +273,6 @@ OnInstanceInit:
 	monster 'map_eom$,0,0,"--ja--", 3101,3, .@event$;	// MM_MANA_WHITE
 	monster 'map_eom$,0,0,"--ja--", 3102,3, .@event$;	// MM_MANA_RED
 	monster 'map_eom$,0,0,"--ja--", 3103,3, .@event$;	// MM_MANA_YELLOW
-	
-	
-	// 'step = 3;
-	// donpcevent instance_npcname("#gate_to_ice") + "::OnEnable";
-	// enablenpc instance_npcname("Nidhogg#eomnyd01");
-	// enablenpc instance_npcname("Brinaranea#brinpc01");
-	// sleep 1000;
-	// mapwarp 'map_eom$,'map_eom$,22,116;
-	
-	// 'step = 7;
-	// enablenpc instance_npcname("#fire_event01");
-	// donpcevent instance_npcname("#gate_to_fire") + "::OnEnable";
-	// sleep 1000;
-	// mapwarp 'map_eom$,'map_eom$,132,93;
-	
-	// 'step = 9;
-	// enablenpc instance_npcname("#moc_master");
-	// sleep 1000;
-	// mapwarp 'map_eom$,'map_eom$,101,194;
-	
-	'step = 10;
-	enablenpc instance_npcname("Nidhogg#eomnyd01");
-	donpcevent instance_npcname("#morocc_god") + "::OnStart";
-	sleep 1000;
-	mapwarp 'map_eom$,'map_eom$,101,194;
 	end;
 }
 
