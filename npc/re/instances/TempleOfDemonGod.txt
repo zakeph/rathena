@@ -1635,7 +1635,7 @@ OnPhase02:
 	monster 'map_eom$,101,207, "Demigod",3096,1, instance_npcname("#despair_god_main") + "::OnMobDead";	// MM_MOROCC_KID
 	'boss_id = $@mobid[0];
 	setunitdata 'boss_id, UMOB_HP, 'boss_hp;
-	setunitdata 'boss_id, UMOB_MODE, (MD_MVP|MD_STATUS_IMMUNE|MD_KNOCKBACK_IMMUNE|MD_MVP|MD_DETECTOR);	// todo: MD_SKILL_IMMUNE ?
+	setunitdata 'boss_id, UMOB_MODE, (MD_MVP|MD_STATUSIMMUNE|MD_KNOCKBACKIMMUNE|MD_MVP|MD_DETECTOR);	// todo: MD_SKILL_IMMUNE ?
 	sleep 2000;
 	if ('boss_id == 0)
 		end;
