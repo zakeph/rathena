@@ -8633,8 +8633,8 @@ t_tick status_get_sc_def(struct block_list *src, struct block_list *bl, enum sc_
 		std::shared_ptr<s_skill_db> skill = skill_db.find(battle_getcurrentskill(src));
 
 		if (skill != nullptr && skill->skill_type == BF_MAGIC)
-				return 0;
-		}
+			return 0;
+	}
 
 	rate = cap_value(rate, 0, 10000);
 	sd = BL_CAST(BL_PC,bl);
