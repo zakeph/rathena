@@ -1136,7 +1136,6 @@ S_Event:
 	return;
 
 OnMobDead:
-	'boss_id = 0;
 	stopnpctimer instance_npcname("#fire_hpcheck");
 	stopnpctimer instance_npcname("#muspellskoll_event_1");
 	stopnpctimer instance_npcname("#muspellskoll_event_2");
