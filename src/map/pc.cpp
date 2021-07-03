@@ -12057,8 +12057,8 @@ uint64 SkillTreeDatabase::parseBodyNode(const YAML::Node &node) {
 				uint16 baselv_max = static_cast<uint16>(pc_class_maxbaselv(job_id));
 
 				if (baselv > baselv_max) {
-					this->invalidWarning(it["BaseLevel"], "Skill %hu's base level requirement %d exceeds job %s's max base level %d. Capping skill base level.\n",
-						skill_id, baselv, job_name, baselv_max);
+					this->invalidWarning(it["BaseLevel"], "Skill %hu's base level requirement %hu exceeds job %s's max base level %d. Capping skill base level.\n",
+						skill_id, baselv, job_name.c_str(), baselv_max);
 					baselv = baselv_max;
 				}
 				entry->baselv = baselv;
@@ -12076,8 +12076,8 @@ uint64 SkillTreeDatabase::parseBodyNode(const YAML::Node &node) {
 				uint16 joblv_max = static_cast<uint16>(pc_class_maxjoblv(job_id));
 
 				if (joblv > joblv_max) {
-					this->invalidWarning(it["JobLevel"], "Skill %hu's job level requirement %d exceeds job %s's max job level %d. Capping skill job level.\n",
-						skill_id, joblv, job_name, joblv_max);
+					this->invalidWarning(it["JobLevel"], "Skill %hu's job level requirement %hu exceeds job %s's max job level %d. Capping skill job level.\n",
+						skill_id, joblv, job_name.c_str(), joblv_max);
 					joblv = joblv_max;
 				}
 				entry->joblv = joblv;
@@ -12176,12 +12176,12 @@ void SkillTreeDatabase::loadingFinished() {
 				std::shared_ptr<s_skill_tree_entry> skill = skill_tree->skills[it.first];
 
 				if (skill->baselv > baselv_max) {
-					ShowWarning("SkillTreeDatabase: Skill %hu's base level requirement %d exceeds job %s's max base level %d. Capping skill base level.\n",
+					ShowWarning("SkillTreeDatabase: Skill %hu's base level requirement %hu exceeds job %s's max base level %d. Capping skill base level.\n",
 						skill->skill_id, skill->baselv, job_name(data.first), baselv_max);
 					skill->baselv = baselv_max;
 				}
 				if (skill->joblv > joblv_max) {
-					ShowWarning("SkillTreeDatabase: Skill %hu's job level requirement %d exceeds job %s's max job level %d. Capping skill job level.\n",
+					ShowWarning("SkillTreeDatabase: Skill %hu's job level requirement %hu exceeds job %s's max job level %d. Capping skill job level.\n",
 						skill->skill_id, skill->joblv, job_name(data.first), joblv_max);
 					skill->joblv = joblv_max;
 				}
