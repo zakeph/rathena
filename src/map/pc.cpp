@@ -14523,9 +14523,6 @@ void pc_scdata_received(map_session_data *sd) {
 
 	clif_weight_limit( sd );
 
-	if( pc_has_permission( sd, PC_PERM_ATTENDANCE ) && pc_attendance_enabled() && !pc_attendance_rewarded_today( sd ) && pc_attendance_counter(sd) < 200 ){
-		clif_ui_open( *sd, OUT_UI_ATTENDANCE, pc_attendance_counter( sd ) );
-	}
 
 	sd->state.pc_loaded = true;
 
@@ -15315,67 +15312,101 @@ bool pc_attendance_enabled(){
 	return pc_attendance_period() != nullptr;
 }
 
-static inline bool pc_attendance_rewarded_today( map_session_data* sd ){
-	return pc_readreg2( sd, ATTENDANCE_DATE_VAR ) >= date_get(DT_YYYYMMDD);
-}
-
-int32 pc_attendance_counter( map_session_data* sd ){
+int32 pc_attendance_period_day( struct map_session_data* sd ){
+	uint32 date = date_get(DT_YYYYMMDD);
 	std::shared_ptr<s_attendance_period> period = pc_attendance_period();
 
-	// No running attendance period
-	if( period == nullptr ){
+	if (period == nullptr)
 		return 0;
-	}
 
-	// Get the counter for the current period
-	int counter = static_cast<int>(pc_readreg2( sd, ATTENDANCE_COUNT_VAR ));
+	uint32 max_counter = (date - period->start) + 1;
+
+	if(max_counter > period->rewards.size())
+		return period->rewards.size();
 
 	// Check if we have a remaining counter from a previous period
-	if( counter > 0 && pc_readreg2( sd, ATTENDANCE_DATE_VAR ) < period->start ){
-		// Reset the counter to zero
-		pc_setreg2( sd, ATTENDANCE_COUNT_VAR, 0 );
-
-		return 0;
+	if (pc_readreg2(sd, ATTENDANCE_DATE_VAR) < period->start || pc_readreg2(sd, ATTENDANCE_COUNT_VAR) > max_counter) {
+		pc_setreg2(sd, ATTENDANCE_COUNT_VAR, 0);
+		pc_setreg2(sd, ATTENDANCE_POINTS_VAR, 0);
+		pc_setreg2(sd, ATTENDANCE_DATE_VAR, date_get(DT_YYYYMMDD));
 	}
 
-	return 10 * counter + ( ( pc_attendance_rewarded_today(sd) ) ? 1 : 0 );
+	return max_counter;
 }
 
-void pc_attendance_claim_reward( map_session_data* sd ){
-	// If the user's group does not have the permission
-	if( !pc_has_permission( sd, PC_PERM_ATTENDANCE ) ){
+int32 pc_attendance_counter( struct map_session_data* sd ){
+	if (sd == NULL)
+		return 0;
+
+	int32 max_counter = pc_attendance_period_day(sd);
+
+	if (max_counter > 0) {
+		int counter = static_cast<int>(pc_readreg2(sd, ATTENDANCE_COUNT_VAR));
+		int attendance_points = static_cast<int>(pc_readreg2(sd, ATTENDANCE_POINTS_VAR));
+		char output[128];
+
+		sprintf(output, "[Battle Pass] Your current points: %d/%d", attendance_points, (max_counter * 100));
+		clif_messagecolor(&sd->bl, color_table[COLOR_CYAN], output, false, SELF);
+
+		return 10 * counter + ((counter >= max_counter) ? 1 : 0);
+	}
+	
+	return 0;
+}
+
+void pc_attendance_addpoints(struct map_session_data* sd, int points) {
+	if (sd == NULL || !pc_attendance_enabled())
 		return;
+
+	int32 max_points = pc_attendance_period_day(sd) * 100;
+	int attendance_points = static_cast<int>(pc_readreg2(sd, ATTENDANCE_POINTS_VAR));
+
+	if (attendance_points > max_points)
+		ShowError("pc_attendance_addpoints: points = %d higher than max_points = %dunexpected op=%d (aid=%d cid=%d)\n", attendance_points, max_points, sd->status.account_id, sd->status.char_id);
+	else if (attendance_points < max_points) {
+		char output[128];
+		attendance_points += points;
+		points = attendance_points > max_points ? max_points : attendance_points;
+		pc_setreg2(sd, ATTENDANCE_POINTS_VAR, points);
+		sprintf(output, "[Battle Pass] Your current points have increased: %d/%d", points, max_points);
+		clif_messagecolor(&sd->bl, color_table[COLOR_CYAN], output, false, SELF);
 	}
 
-	// Check if the attendance feature is disabled
-	if( !pc_attendance_enabled() ){
-		return;
-	}
+	return;
+}
 
-	// Check if the user already got his reward today
-	if( pc_attendance_rewarded_today( sd ) ){
+void pc_attendance_claim_reward( struct map_session_data* sd ){
+	if (sd == NULL || !pc_attendance_enabled())
 		return;
-	}
 
 	int32 attendance_counter = static_cast<int32>(pc_readreg2( sd, ATTENDANCE_COUNT_VAR ));
 
 	attendance_counter += 1;
 
+	// Check if the user already got his reward today
+	int32 max_attendance_counter = pc_attendance_period_day(sd);
+	if (attendance_counter > max_attendance_counter)
+		return;
+
+	char output[128];
+	int attendance_points = static_cast<int>(pc_readreg2(sd, ATTENDANCE_POINTS_VAR));
+
+	if (attendance_points < (attendance_counter * 100)) {
+		sprintf(output, "[Battle Pass] You are still missing points for the next reward: %d/%d", attendance_points, (attendance_counter * 100));
+		clif_messagecolor(&sd->bl, color_table[COLOR_CYAN], output, false, SELF);
+		return;
+	}
+
 	std::shared_ptr<s_attendance_period> period = pc_attendance_period();
 
-	if( period == nullptr ){
+	if(period == nullptr)
 		return;
-	}
 
-	if( period->rewards.size() < attendance_counter ){
+	if(period->rewards.size() < attendance_counter)
 		return;
-	}
 
 	pc_setreg2( sd, ATTENDANCE_DATE_VAR, date_get(DT_YYYYMMDD) );
 	pc_setreg2( sd, ATTENDANCE_COUNT_VAR, attendance_counter );
-
-	if( save_settings&CHARSAVE_ATTENDANCE )
-		chrif_save(sd, CSAVE_NORMAL);
 
 	std::shared_ptr<s_attendance_reward> reward = period->rewards[attendance_counter - 1];
 
@@ -15398,7 +15429,13 @@ void pc_attendance_claim_reward( map_session_data* sd ){
 
 	intif_Mail_send(0, &msg);
 
-	clif_attendence_response( sd, attendance_counter );
+	if (save_settings & CHARSAVE_ATTENDANCE)
+		chrif_save(sd, CSAVE_NORMAL);
+
+	if(attendance_points > ((attendance_counter-1) * 100))
+		clif_ui_open(*sd, OUT_UI_ATTENDANCE, pc_attendance_counter(sd));
+	else
+		clif_attendence_response( sd, attendance_counter);
 }
 
 /**

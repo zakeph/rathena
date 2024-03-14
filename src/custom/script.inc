@@ -17,3 +17,16 @@
 //	script_pushint(st,1);
 //	return 0;
 //}
+
+BUILDIN_FUNC(attendance_addpoints) 
+{
+	TBL_PC* sd;
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_FAILURE;
+
+	int points = script_getnum(st, 2);
+
+	pc_attendance_addpoints(sd, points);
+
+	return SCRIPT_CMD_SUCCESS;
+}

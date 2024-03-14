@@ -62,6 +62,7 @@ class MapGuild;
 #define JOBCHANGE4TH_VAR "jobchange_level_4th"
 #define TKMISSIONID_VAR "TK_MISSION_ID"
 #define TKMISSIONCOUNT_VAR "TK_MISSION_COUNT"
+#define ATTENDANCE_POINTS_VAR "#AttendancePoints"
 #define ATTENDANCE_DATE_VAR "#AttendanceDate"
 #define ATTENDANCE_COUNT_VAR "#AttendanceCounter"
 #define ACHIEVEMENTLEVEL "AchievementLevel"
@@ -1730,7 +1731,9 @@ uint16 pc_level_penalty_mod( map_session_data* sd, e_penalty_type type, std::sha
 #endif
 
 bool pc_attendance_enabled();
+int32 pc_attendance_period_day(struct map_session_data* sd);
 int32 pc_attendance_counter( map_session_data* sd );
+void pc_attendance_addpoints(struct map_session_data* sd, int points);
 void pc_attendance_claim_reward( map_session_data* sd );
 
 void pc_jail(map_session_data &sd, int32 duration = INT_MAX);
